@@ -307,6 +307,16 @@ input:focus,select:focus{border-color:#111827}
       <div id="txnList"></div>
     </div>
 
+    <div class="panel">
+      <label style="margin-bottom:6px">Backup</label>
+      <div class="note" style="margin-top:0">Download your ledger as a file, or load one back in — handy for moving data between devices or backing it up before clearing your browser.</div>
+      <div class="row" style="margin-top:10px">
+        <button class="log-btn" style="margin-top:0" onclick="exportLedger()">Export JSON</button>
+        <button class="log-btn" style="margin-top:0;background:#374151" onclick="triggerImportFile()">Import JSON</button>
+      </div>
+      <input type="file" id="importFileInput" accept="application/json" class="hidden" onchange="handleImportFile(event)">
+    </div>
+
   </div>
 </section>
 
@@ -444,14 +454,29 @@ function logSale(){
 }
 
 /* =========================================================
-   Ledger + persistence (db capability — real per-artifact storage)
+   Ledger + persistence
+   ---------------------------------------------------------
+   Two backends, auto-selected:
+   1. Claude db capability — used automatically when this page
+      is opened through its published claude.ai link. Real
+      cloud database, synced across devices/sessions.
+   2. localStorage — used automatically everywhere else (a
+      downloaded copy, your own site, a repo you host). Genuinely
+      persists between visits, but only on that one browser/device.
+
+   TO ADD YOUR OWN BACKEND (Firebase, Supabase, your own API, etc.):
+   replace the body of fallbackToLocal() + loadLocal()/saveLocal()
+   with calls to your service. Keep the same contract — populate
+   the `transactions` array and call finishLoading()/renderPnl()
+   — and everything above this block keeps working unchanged.
 ========================================================= */
+const LOCAL_KEY = 'cardBizLedger_v1';
 let dbApi = null;
 let txnCol = null;
+let backend = null; // 'claude' | 'local'
 let gotFirstSnapshot = false;
-let localFallback = []; // used only if the db capability isn't available
 
-async function initDb(){
+async function initStorage(){
   try{
     if(window.claude && window.claude.use){
       dbApi = await window.claude.use('db');
@@ -460,6 +485,7 @@ async function initDb(){
     dbApi = null;
   }
   if(dbApi){
+    backend = 'claude';
     storageReady = true;
     txnCol = dbApi.collection('transactions');
     txnCol.orderBy('ts','desc').onSnapshot(
@@ -471,32 +497,45 @@ async function initDb(){
       },
       err=>{
         console.error('db sync error', err);
-        showToast('Sync error — changes may not save');
-        gotFirstSnapshot = true;
-        finishLoading();
+        showToast('Sync error — falling back to local storage');
+        fallbackToLocal();
       }
     );
-    // Safety timeout in case the snapshot never arrives (e.g. capability not granted this view)
-    setTimeout(()=>{ if(!gotFirstSnapshot){ storageReady=false; finishLoading(); } }, 4000);
+    setTimeout(()=>{ if(!gotFirstSnapshot) fallbackToLocal(); }, 4000);
   } else {
-    storageReady = false;
-    transactions = localFallback;
-    finishLoading();
+    fallbackToLocal();
   }
+}
+function fallbackToLocal(){
+  if(backend==='local') return; // already fell back once
+  backend = 'local';
+  storageReady = true; // localStorage genuinely persists on this device
+  transactions = loadLocal();
+  finishLoading();
+}
+function loadLocal(){
+  try{ return JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]'); }
+  catch(e){ return []; }
+}
+function saveLocal(){
+  try{ localStorage.setItem(LOCAL_KEY, JSON.stringify(transactions)); }
+  catch(e){ console.error('local save failed', e); showToast('Could not save — browser storage may be full or disabled'); }
 }
 function finishLoading(){
   document.getElementById('pnlLoading').classList.add('hidden');
   document.getElementById('pnlContent').classList.remove('hidden');
-  if(!storageReady && !document.getElementById('fallbackBanner')){
+  const existingBanner = document.getElementById('backendBanner');
+  if(existingBanner) existingBanner.remove();
+  if(backend==='local'){
     document.getElementById('pnlContent').insertAdjacentHTML('afterbegin',
-      '<div id="fallbackBanner" class="panel" style="background:#fffbeb;border:1px solid #fbbf24"><div class="note" style="color:#92400e;margin-top:0">Storage isn\'t available in this view, so entries will only last for this session.</div></div>');
+      '<div id="backendBanner" class="panel" style="background:#eff6ff;border:1px solid #93c5fd"><div class="note" style="color:#1e40af;margin-top:0">Saved to this browser only — it\'ll be here next time you open this page on this device, but won\'t follow you to another device or browser. Use Export below to back it up or move it.</div></div>');
   }
   checkImportPrompt();
   renderPnl();
 }
 async function addTransaction(t){
-  t.ts = Date.now();
-  if(dbApi && txnCol){
+  t.ts = t.ts || Date.now();
+  if(backend==='claude' && txnCol){
     try{
       await txnCol.add(t); // onSnapshot updates the UI automatically
     }catch(e){
@@ -506,12 +545,12 @@ async function addTransaction(t){
   } else {
     t.id = 't'+Date.now()+Math.random().toString(36).slice(2,7);
     transactions.unshift(t);
-    localFallback = transactions;
+    saveLocal();
     if(!document.getElementById('pnl').classList.contains('hidden')) renderPnl();
   }
 }
 async function deleteTransaction(id){
-  if(dbApi && txnCol){
+  if(backend==='claude' && txnCol){
     try{
       await txnCol.doc(id).delete(); // onSnapshot updates the UI automatically
     }catch(e){
@@ -520,9 +559,60 @@ async function deleteTransaction(id){
     }
   } else {
     transactions = transactions.filter(t=>t.id!==id);
-    localFallback = transactions;
+    saveLocal();
     renderPnl();
   }
+}
+
+/* =========================================================
+   Export / Import (manual backup — works on either backend)
+========================================================= */
+function exportLedger(){
+  if(transactions.length===0){ showToast('Nothing to export yet'); return; }
+  const blob = new Blob([JSON.stringify(transactions, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'card-business-ledger-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Exported '+transactions.length+' entries');
+}
+function triggerImportFile(){
+  document.getElementById('importFileInput').click();
+}
+function handleImportFile(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async e=>{
+    let data;
+    try{
+      data = JSON.parse(e.target.result);
+      if(!Array.isArray(data)) throw new Error('not an array');
+    }catch(err){
+      showToast('That file doesn\'t look like a ledger export');
+      return;
+    }
+    try{
+      if(backend==='claude' && txnCol){
+        await Promise.all(data.map(t=>{ const {id, ...rest} = t; return txnCol.add(rest); }));
+      } else {
+        data.forEach(t=>{ if(!t.id) t.id = 't'+Date.now()+Math.random().toString(36).slice(2,7); });
+        transactions = data.concat(transactions);
+        saveLocal();
+        renderPnl();
+      }
+      showToast('Imported '+data.length+' entries');
+    }catch(err){
+      console.error('Import failed', err);
+      showToast('Import failed partway — check console');
+    }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
 }
 
 function setManualType(type,btn){
@@ -701,23 +791,30 @@ function dateToTs(dateStr){
 }
 
 async function runImport(){
-  if(!dbApi || !txnCol){ showToast('Import needs a saved connection — try reopening the published page'); return; }
   document.getElementById('importBanner').classList.add('hidden');
   showToast('Importing…');
   try{
-    const writes = [];
+    const entries = [];
     SEED_SALES.forEach(([date,desc,amount])=>{
-      writes.push(txnCol.add({type:'sale', desc, amount, ts:dateToTs(date)}));
+      entries.push({type:'sale', desc, amount, ts:dateToTs(date)});
     });
     SEED_EXPENSES.forEach(([date,desc,category,amount])=>{
-      writes.push(txnCol.add({type:'expense', desc, category, amount, ts:dateToTs(date)}));
+      entries.push({type:'expense', desc, category, amount, ts:dateToTs(date)});
     });
     SEED_TRADES.forEach(([date,desc,cashGiven,itemGiven,cashReceived,itemReceived])=>{
-      writes.push(txnCol.add({type:'trade', desc, cashGiven, itemGiven, cashReceived, itemReceived, ts:dateToTs(date)}));
+      entries.push({type:'trade', desc, cashGiven, itemGiven, cashReceived, itemReceived, ts:dateToTs(date)});
     });
-    await Promise.all(writes);
-    await dbApi.doc('meta/import').set({imported:true, importedAt:Date.now()});
-    showToast('Imported '+writes.length+' historical transactions');
+    if(backend==='claude' && txnCol){
+      await Promise.all(entries.map(e=>txnCol.add(e)));
+      await dbApi.doc('meta/import').set({imported:true, importedAt:Date.now()});
+    } else {
+      entries.forEach(e=>{ e.id = 't'+Date.now()+Math.random().toString(36).slice(2,7)+Math.random().toString(36).slice(2,4); });
+      transactions = entries.concat(transactions);
+      saveLocal();
+      localStorage.setItem(LOCAL_KEY+':imported', 'true');
+      renderPnl();
+    }
+    showToast('Imported '+entries.length+' historical transactions');
   }catch(e){
     console.error('Import failed', e);
     showToast('Import failed — see console for details');
@@ -725,18 +822,24 @@ async function runImport(){
 }
 async function dismissImport(){
   document.getElementById('importBanner').classList.add('hidden');
-  if(dbApi){
+  if(backend==='claude' && dbApi){
     try{ await dbApi.doc('meta/import').set({imported:false, skipped:true, skippedAt:Date.now()}); }catch(e){}
+  } else {
+    try{ localStorage.setItem(LOCAL_KEY+':imported', 'skipped'); }catch(e){}
   }
 }
 async function checkImportPrompt(){
-  if(!dbApi) return;
-  try{
-    const marker = await dbApi.doc('meta/import').get();
-    if(!marker.exists && transactions.length===0){
-      document.getElementById('importBanner').classList.remove('hidden');
-    }
-  }catch(e){ /* not critical — just skip the prompt */ }
+  if(transactions.length>0) return;
+  if(backend==='claude' && dbApi){
+    try{
+      const marker = await dbApi.doc('meta/import').get();
+      if(!marker.exists) document.getElementById('importBanner').classList.remove('hidden');
+    }catch(e){ /* not critical — just skip the prompt */ }
+  } else if(backend==='local'){
+    try{
+      if(!localStorage.getItem(LOCAL_KEY+':imported')) document.getElementById('importBanner').classList.remove('hidden');
+    }catch(e){ /* skip prompt if localStorage is blocked */ }
+  }
 }
 
 /* =========================================================
@@ -744,7 +847,7 @@ async function checkImportPrompt(){
 ========================================================= */
 function init(){
   calcBuy(); calcTrade(); calcProfit();
-  initDb();
+  initStorage();
 }
 init();
 </script>
