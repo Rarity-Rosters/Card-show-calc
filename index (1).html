@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111827">
+<title>Card Dealer Calculator V3</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;color:#111827}
+.app{max-width:650px;margin:0 auto;min-height:100vh;padding-bottom:30px}
+header{background:#111827;color:white;padding:22px 18px 18px;position:sticky;top:0;z-index:5}
+h1{margin:0;font-size:25px}
+.sub{margin-top:5px;color:#cbd5e1;font-size:13px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:18px}
+.tab{border:0;border-radius:10px;padding:12px 6px;font-weight:700;background:#374151;color:#d1d5db;font-size:14px}
+.tab.active{background:white;color:#111827}
+main{padding:16px}
+.panel{background:white;border-radius:16px;padding:17px;margin-bottom:14px;box-shadow:0 2px 8px #0000000d}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:7px;color:#374151}
+input{width:100%;padding:13px;border:2px solid #d1d5db;border-radius:10px;font-size:18px;outline:none}
+input:focus{border-color:#111827}
+.rate-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rate{padding:13px 5px;border:2px solid #d1d5db;background:white;border-radius:10px;font-weight:800;font-size:15px}
+.rate.selected{background:#111827;color:white;border-color:#111827}
+.results{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.result{background:#f9fafb;border-radius:11px;padding:13px}
+.result .k{font-size:12px;color:#6b7280}
+.result .v{font-size:21px;font-weight:800;margin-top:4px}
+.big{background:#111827;color:white;border-radius:14px;padding:18px;margin-top:12px}
+.big .v{font-size:30px;font-weight:900;margin-top:4px}
+.green{font-weight:800}
+.table{width:100%;border-collapse:collapse;font-size:14px}
+.table th,.table td{padding:10px 6px;border-bottom:1px solid #e5e7eb;text-align:right}
+.table th:first-child,.table td:first-child{text-align:left}
+.table th{font-size:12px;color:#6b7280}
+.note{font-size:12px;color:#6b7280;line-height:1.45;margin-top:10px}
+.hidden{display:none}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.clear{width:100%;padding:11px;border:0;border-radius:10px;background:#e5e7eb;font-weight:700;margin-top:10px}
+@media(max-width:430px){main{padding:11px}.panel{padding:14px}.rate{font-size:14px}.result .v{font-size:19px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <h1>Card Dealer Calculator</h1>
+  <div class="sub">V3 • Dealer Mode • Cash → Trade +5%</div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('buy',this)">BUY</button>
+    <button class="tab" onclick="showTab('trade',this)">TRADE</button>
+    <button class="tab" onclick="showTab('profit',this)">PROFIT</button>
+  </div>
+</header>
+
+<main>
+<section id="buy">
+  <div class="panel">
+    <label>Market Value</label>
+    <input id="buyValue" type="number" min="0" step="0.01" placeholder="$0.00" oninput="calcBuy()">
+  </div>
+
+  <div class="panel">
+    <label>Cash Buy Rate</label>
+    <div class="rate-grid">
+      <button class="rate" onclick="setRate(70,this)">70%</button>
+      <button class="rate" onclick="setRate(75,this)">75%</button>
+      <button class="rate selected" onclick="setRate(80,this)">80%</button>
+      <button class="rate" onclick="setRate(85,this)">85%</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="results">
+      <div class="result"><div class="k">Cash Offer</div><div class="v" id="cashOffer">$0.00</div></div>
+      <div class="result"><div class="k">Trade Value</div><div class="v" id="tradeValue">$0.00</div></div>
+      <div class="result"><div class="k">Profit at Cash</div><div class="v" id="buyProfit">$0.00</div></div>
+      <div class="result"><div class="k">ROI at Cash</div><div class="v" id="buyROI">0.0%</div></div>
+    </div>
+    <div class="note">Trade value is automatically 5 percentage points above your cash rate.</div>
+  </div>
+
+  <div class="panel">
+    <label>Quick Rate Ladder</label>
+    <table class="table">
+      <thead><tr><th>Rate</th><th>Cash</th><th>Trade</th><th>Profit</th><th>ROI</th></tr></thead>
+      <tbody id="ladder"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="trade" class="hidden">
+  <div class="panel">
+    <label>Market Value of Card(s) You're Receiving</label>
+    <input id="tradeReceived" type="number" min="0" step="0.01" placeholder="$0.00" oninput="calcTrade()">
+  </div>
+  <div class="panel">
+    <label>Your Cash Buy Rate</label>
+    <div class="rate-grid">
+      <button class="rate" onclick="setTradeRate(70,this)">70%</button>
+      <button class="rate" onclick="setTradeRate(75,this)">75%</button>
+      <button class="rate selected" onclick="setTradeRate(80,this)">80%</button>
+      <button class="rate" onclick="setTradeRate(85,this)">85%</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="results">
+      <div class="result"><div class="k">Trade Credit (Your Cost)</div><div class="v" id="tradeCredit">$0.00</div></div>
+      <div class="result"><div class="k">Trade Rate</div><div class="v" id="tradeRate">85%</div></div>
+      <div class="result"><div class="k">Potential Profit</div><div class="v" id="tradeProfit">$0.00</div></div>
+      <div class="result"><div class="k">ROI</div><div class="v" id="tradeROI">0.0%</div></div>
+    </div>
+    <div class="note">This treats the trade credit you give as your acquisition cost for the cards you receive.</div>
+  </div>
+  <div class="panel">
+    <label>Market Value of Cards You're Giving</label>
+    <input id="tradeGiving" type="number" min="0" step="0.01" placeholder="$0.00" oninput="calcTrade()">
+    <div class="results" style="margin-top:10px">
+      <div class="result"><div class="k">Your Trade Credit</div><div class="v" id="givingCredit">$0.00</div></div>
+      <div class="result"><div class="k">Difference</div><div class="v" id="tradeDifference">$0.00</div></div>
+    </div>
+    <div class="note">Difference = trade credit you receive for what you give minus the market value of what you receive. Positive means you're giving less market value than you're receiving.</div>
+  </div>
+</section>
+
+<section id="profit" class="hidden">
+  <div class="panel">
+    <label>Market / Sale Value</label>
+    <input id="saleValue" type="number" min="0" step="0.01" placeholder="$0.00" oninput="calcProfit()">
+  </div>
+  <div class="panel">
+    <div class="row">
+      <div><label>Acquisition Cost</label><input id="cost" type="number" min="0" step="0.01" placeholder="$0.00" oninput="calcProfit()"></div>
+      <div><label>Fees</label><input id="fees" type="number" min="0" step="0.01" placeholder="$0.00" oninput="calcProfit()"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="results">
+      <div class="result"><div class="k">Net Profit</div><div class="v" id="netProfit">$0.00</div></div>
+      <div class="result"><div class="k">ROI</div><div class="v" id="profitROI">0.0%</div></div>
+      <div class="result"><div class="k">Margin</div><div class="v" id="margin">0.0%</div></div>
+      <div class="result"><div class="k">Total Cost</div><div class="v" id="totalCost">$0.00</div></div>
+    </div>
+  </div>
+</section>
+</main>
+</div>
+
+<script>
+let buyRate=80, tradeRateChoice=80;
+
+function money(n){return '$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function pct(n){return (Number(n)||0).toFixed(1)+'%'}
+
+function showTab(id,btn){
+  ['buy','trade','profit'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  btn.classList.add('active');
+}
+function setRate(r,btn){
+  buyRate=r;
+  document.querySelectorAll('#buy .rate').forEach(x=>x.classList.remove('selected'));
+  btn.classList.add('selected');
+  calcBuy();
+}
+function calcBuy(){
+  const v=parseFloat(document.getElementById('buyValue').value)||0;
+  const cash=v*buyRate/100, trade=v*(buyRate+5)/100, profit=v-cash, roi=cash?profit/cash*100:0;
+  document.getElementById('cashOffer').textContent=money(cash);
+  document.getElementById('tradeValue').textContent=money(trade);
+  document.getElementById('buyProfit').textContent=money(profit);
+  document.getElementById('buyROI').textContent=pct(roi);
+  document.getElementById('ladder').innerHTML=[70,75,80,85].map(r=>{
+    const c=v*r/100,t=v*(r+5)/100,p=v-c,ro=c?p/c*100:0;
+    return `<tr><td>${r}%</td><td>${money(c)}</td><td>${money(t)}</td><td>${money(p)}</td><td>${pct(ro)}</td></tr>`;
+  }).join('');
+}
+function setTradeRate(r,btn){
+  tradeRateChoice=r;
+  document.querySelectorAll('#trade .rate').forEach(x=>x.classList.remove('selected'));
+  btn.classList.add('selected');
+  calcTrade();
+}
+function calcTrade(){
+  const received=parseFloat(document.getElementById('tradeReceived').value)||0;
+  const giving=parseFloat(document.getElementById('tradeGiving').value)||0;
+  const tr=tradeRateChoice+5, credit=received*tr/100, profit=received-credit, roi=credit?profit/credit*100:0;
+  const givingCredit=giving*tr/100, difference=givingCredit-received;
+  document.getElementById('tradeCredit').textContent=money(credit);
+  document.getElementById('tradeRate').textContent=tr+'%';
+  document.getElementById('tradeProfit').textContent=money(profit);
+  document.getElementById('tradeROI').textContent=pct(roi);
+  document.getElementById('givingCredit').textContent=money(givingCredit);
+  document.getElementById('tradeDifference').textContent=money(difference);
+}
+function calcProfit(){
+  const sale=parseFloat(document.getElementById('saleValue').value)||0;
+  const cost=parseFloat(document.getElementById('cost').value)||0;
+  const fees=parseFloat(document.getElementById('fees').value)||0;
+  const total=cost+fees, profit=sale-total, roi=total?profit/total*100:0, margin=sale?profit/sale*100:0;
+  document.getElementById('netProfit').textContent=money(profit);
+  document.getElementById('profitROI').textContent=pct(roi);
+  document.getElementById('margin').textContent=pct(margin);
+  document.getElementById('totalCost').textContent=money(total);
+}
+calcBuy(); calcTrade(); calcProfit();
+</script>
+</body>
+</html>
