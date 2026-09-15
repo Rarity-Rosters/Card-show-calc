@@ -4,22 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#111827">
-<title>Card Dealer Calculator V3</title>
+<title>Card Dealer Calculator V4</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;color:#111827}
-.app{max-width:650px;margin:0 auto;min-height:100vh;padding-bottom:30px}
+.app{max-width:650px;margin:0 auto;min-height:100vh;padding-bottom:40px}
 header{background:#111827;color:white;padding:22px 18px 18px;position:sticky;top:0;z-index:5}
 h1{margin:0;font-size:25px}
 .sub{margin-top:5px;color:#cbd5e1;font-size:13px}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:18px}
-.tab{border:0;border-radius:10px;padding:12px 6px;font-weight:700;background:#374151;color:#d1d5db;font-size:14px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:18px}
+.tab{border:0;border-radius:10px;padding:11px 4px;font-weight:700;background:#374151;color:#d1d5db;font-size:13px}
 .tab.active{background:white;color:#111827}
 main{padding:16px}
 .panel{background:white;border-radius:16px;padding:17px;margin-bottom:14px;box-shadow:0 2px 8px #0000000d}
 label{display:block;font-size:13px;font-weight:700;margin-bottom:7px;color:#374151}
-input{width:100%;padding:13px;border:2px solid #d1d5db;border-radius:10px;font-size:18px;outline:none}
-input:focus{border-color:#111827}
+input,select{width:100%;padding:13px;border:2px solid #d1d5db;border-radius:10px;font-size:16px;outline:none;font-family:inherit;background:white}
+input:focus,select:focus{border-color:#111827}
 .rate-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .rate{padding:13px 5px;border:2px solid #d1d5db;background:white;border-radius:10px;font-weight:800;font-size:15px}
 .rate.selected{background:#111827;color:white;border-color:#111827}
@@ -29,7 +29,6 @@ input:focus{border-color:#111827}
 .result .v{font-size:21px;font-weight:800;margin-top:4px}
 .big{background:#111827;color:white;border-radius:14px;padding:18px;margin-top:12px}
 .big .v{font-size:30px;font-weight:900;margin-top:4px}
-.green{font-weight:800}
 .table{width:100%;border-collapse:collapse;font-size:14px}
 .table th,.table td{padding:10px 6px;border-bottom:1px solid #e5e7eb;text-align:right}
 .table th:first-child,.table td:first-child{text-align:left}
@@ -37,23 +36,60 @@ input:focus{border-color:#111827}
 .note{font-size:12px;color:#6b7280;line-height:1.45;margin-top:10px}
 .hidden{display:none}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.clear{width:100%;padding:11px;border:0;border-radius:10px;background:#e5e7eb;font-weight:700;margin-top:10px}
-@media(max-width:430px){main{padding:11px}.panel{padding:14px}.rate{font-size:14px}.result .v{font-size:19px}}
+.log-btn{width:100%;padding:14px;border:0;border-radius:12px;background:#059669;color:white;font-weight:800;font-size:15px;margin-top:12px}
+.log-btn:active{background:#047857}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111827;color:white;padding:11px 18px;border-radius:10px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+.toast.show{opacity:1}
+/* P&L tab */
+.pl-section{font-size:12px;font-weight:800;letter-spacing:.02em;color:#6b7280;margin:18px 0 8px;padding-top:2px}
+.pl-section:first-child{margin-top:0}
+.pl-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #f3f4f6;font-size:14px}
+.pl-row:last-child{border-bottom:0}
+.pl-row .lbl{color:#374151}
+.pl-row .amt{font-weight:800;font-variant-numeric:tabular-nums}
+.pl-row.total{border-top:2px solid #111827;margin-top:4px;padding-top:12px}
+.pl-row.total .amt{font-size:17px}
+.pos{color:#059669}
+.neg{color:#dc2626}
+.headline{border-radius:14px;padding:18px;margin-top:6px}
+.headline.realized{background:#ecfdf5;border:2px solid #059669}
+.headline.unrealized{background:#fff7ed;border:2px solid #ea580c}
+.headline .k{font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.03em}
+.headline .v{font-size:26px;font-weight:900;margin-top:5px}
+.txn{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid #f3f4f6}
+.txn:last-child{border-bottom:0}
+.txn .badge{display:inline-block;font-size:10px;font-weight:800;padding:3px 7px;border-radius:6px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.02em}
+.badge.sale{background:#dbeafe;color:#1d4ed8}
+.badge.expense{background:#fee2e2;color:#b91c1c}
+.badge.trade{background:#ede9fe;color:#6d28d9}
+.txn .d{font-size:13px;color:#374151;line-height:1.35}
+.txn .date{font-size:11px;color:#9ca3af;margin-top:2px}
+.txn .right{text-align:right;flex-shrink:0}
+.txn .amt{font-weight:800;font-size:14px}
+.del{border:0;background:none;color:#9ca3af;font-size:18px;padding:2px 4px;margin-top:4px;line-height:1}
+.empty{text-align:center;color:#9ca3af;font-size:13px;padding:24px 0}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.seg button{padding:10px 4px;border:2px solid #d1d5db;background:white;border-radius:9px;font-weight:700;font-size:13px}
+.seg button.selected{background:#111827;color:white;border-color:#111827}
+@media(max-width:430px){main{padding:11px}.panel{padding:14px}.rate{font-size:14px}.result .v{font-size:19px}.tab{font-size:12px}}
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <h1>Card Dealer Calculator</h1>
-  <div class="sub">V3 • Dealer Mode • Cash → Trade +5%</div>
+  <div class="sub">V4 • Dealer Mode • Cash → Trade +5% • Linked to P&amp;L</div>
   <div class="tabs">
     <button class="tab active" onclick="showTab('buy',this)">BUY</button>
     <button class="tab" onclick="showTab('trade',this)">TRADE</button>
     <button class="tab" onclick="showTab('profit',this)">PROFIT</button>
+    <button class="tab" onclick="showTab('pnl',this)">P&amp;L</button>
   </div>
 </header>
 
 <main>
+
+<!-- ============ BUY ============ -->
 <section id="buy">
   <div class="panel">
     <label>Market Value</label>
@@ -87,8 +123,16 @@ input:focus{border-color:#111827}
       <tbody id="ladder"></tbody>
     </table>
   </div>
+
+  <div class="panel">
+    <label>What are you buying? (optional, for your records)</label>
+    <input id="buyDesc" type="text" placeholder="e.g. Charizard PSA 10 Celebrations">
+    <button class="log-btn" onclick="logBuy()">Log as Expense (Cash Offer)</button>
+    <div class="note">Logs the Cash Offer as a purchase expense. The Market Value is saved as a note only — it isn't counted as profit until you actually sell the card.</div>
+  </div>
 </section>
 
+<!-- ============ TRADE ============ -->
 <section id="trade" class="hidden">
   <div class="panel">
     <label>Market Value of Card(s) You're Receiving</label>
@@ -121,8 +165,25 @@ input:focus{border-color:#111827}
     </div>
     <div class="note">Difference = trade credit you receive for what you give minus the market value of what you receive. Positive means you're giving less market value than you're receiving.</div>
   </div>
+
+  <div class="panel">
+    <label>Cash added on top (optional)</label>
+    <div class="row">
+      <div><label style="font-weight:600;font-size:12px">You also pay</label><input id="tradeCashGiven" type="number" min="0" step="0.01" placeholder="$0.00" oninput="calcTrade()"></div>
+      <div><label style="font-weight:600;font-size:12px">You also receive</label><input id="tradeCashReceived" type="number" min="0" step="0.01" placeholder="$0.00" oninput="calcTrade()"></div>
+    </div>
+    <div class="note">Fill these in if cash changed hands alongside the cards, like "$120 + Card A for Card B".</div>
+  </div>
+
+  <div class="panel">
+    <label>Trade description (optional, for your records)</label>
+    <input id="tradeDesc" type="text" placeholder="e.g. Oricorio EX PSA 10 for Mewtwo V + Dialga V">
+    <button class="log-btn" onclick="logTrade()">Log This Trade</button>
+    <div class="note">Logs the market values above as a trade: the cash portion counts as Realized, the card-value portion counts as Unrealized (paper value, not sold yet).</div>
+  </div>
 </section>
 
+<!-- ============ PROFIT ============ -->
 <section id="profit" class="hidden">
   <div class="panel">
     <label>Market / Sale Value</label>
@@ -142,21 +203,151 @@ input:focus{border-color:#111827}
       <div class="result"><div class="k">Total Cost</div><div class="v" id="totalCost">$0.00</div></div>
     </div>
   </div>
+
+  <div class="panel">
+    <label>What did you sell? (optional, for your records)</label>
+    <input id="saleDesc" type="text" placeholder="e.g. Sylveon EX">
+    <button class="log-btn" onclick="logSale()">Log This Sale</button>
+    <div class="note">Logs the Sale Value as Sales Revenue and the Fees as an expense. Acquisition Cost is <b>not</b> logged again here — it should already be on the books from when you bought or traded for the card, so this avoids double-counting.</div>
+  </div>
 </section>
+
+<!-- ============ P&L ============ -->
+<section id="pnl" class="hidden">
+
+  <div id="pnlLoading" class="panel" style="text-align:center;color:#6b7280;font-size:13px">Loading your P&amp;L…</div>
+
+  <div id="importBanner" class="hidden panel" style="background:#eff6ff;border:1px solid #93c5fd">
+    <label style="margin-bottom:6px">Import your existing P&amp;L data</label>
+    <div class="note" style="margin-top:0">This loads the sales, expenses, and trades from your workbook (7/9/26 through 9/3/26) into this ledger, dated correctly. One-time — safe to skip if you'd rather start fresh.</div>
+    <div class="row" style="margin-top:12px">
+      <button class="log-btn" style="margin-top:0;background:#2563eb" onclick="runImport()">Import Historical Data</button>
+      <button class="log-btn" style="margin-top:0;background:#9ca3af" onclick="dismissImport()">Skip</button>
+    </div>
+  </div>
+
+  <div id="pnlContent" class="hidden">
+
+    <div class="panel">
+      <div class="headline realized">
+        <div class="k">Net Realized Profit (cash basis)</div>
+        <div class="v" id="netRealized">$0.00</div>
+      </div>
+      <div class="pl-section">Realized (cash) income</div>
+      <div class="pl-row"><span class="lbl">Sales Revenue</span><span class="amt" id="plSales">$0.00</span></div>
+      <div class="pl-row"><span class="lbl">Trade Cash Flow (Realized)</span><span class="amt" id="plTradeRealized">$0.00</span></div>
+      <div class="pl-row total"><span class="lbl">Total Realized Income</span><span class="amt" id="plTotalIncome">$0.00</span></div>
+      <div class="pl-section">Expenses</div>
+      <div class="pl-row"><span class="lbl">Table / Event Fees</span><span class="amt" id="plFees">$0.00</span></div>
+      <div class="pl-row"><span class="lbl">Card Purchases</span><span class="amt" id="plPurchases">$0.00</span></div>
+      <div class="pl-row"><span class="lbl">Selling Fees</span><span class="amt" id="plSellFees">$0.00</span></div>
+      <div class="pl-row total"><span class="lbl">Total Expenses</span><span class="amt" id="plTotalExp">$0.00</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="headline unrealized">
+        <div class="k">Unrealized Trading Gain (paper, not cash)</div>
+        <div class="v" id="netUnrealized">$0.00</div>
+      </div>
+      <div class="note">This is the appraisal-value edge on cards you've traded for but haven't sold yet.</div>
+    </div>
+
+    <div class="panel">
+      <div class="pl-row total"><span class="lbl" style="font-weight:800">Total Economic Profit</span><span class="amt" id="plGrandTotal">$0.00</span></div>
+    </div>
+
+    <div class="panel">
+      <label style="margin-bottom:14px">Add a manual entry</label>
+      <div class="seg" id="manualSeg">
+        <button class="selected" onclick="setManualType('sale',this)">Sale</button>
+        <button onclick="setManualType('expense',this)">Expense</button>
+        <button onclick="setManualType('trade',this)">Trade</button>
+      </div>
+
+      <div id="manualSale">
+        <div class="row">
+          <div><label style="font-size:12px">Amount</label><input id="manSaleAmt" type="number" min="0" step="0.01" placeholder="$0.00"></div>
+          <div><label style="font-size:12px">Description</label><input id="manSaleDesc" type="text" placeholder="What you sold"></div>
+        </div>
+      </div>
+
+      <div id="manualExpense" class="hidden">
+        <div class="row">
+          <div><label style="font-size:12px">Amount</label><input id="manExpAmt" type="number" min="0" step="0.01" placeholder="$0.00"></div>
+          <div><label style="font-size:12px">Type</label>
+            <select id="manExpCat">
+              <option value="Table Fee">Table Fee</option>
+              <option value="Purchase">Purchase</option>
+              <option value="Selling Fee">Selling Fee</option>
+            </select>
+          </div>
+        </div>
+        <label style="font-size:12px;margin-top:10px">Description</label>
+        <input id="manExpDesc" type="text" placeholder="What it was for">
+      </div>
+
+      <div id="manualTrade" class="hidden">
+        <div class="row">
+          <div><label style="font-size:12px">Cash given</label><input id="manTCashGiven" type="number" min="0" step="0.01" placeholder="$0.00"></div>
+          <div><label style="font-size:12px">Item(s) given value</label><input id="manTItemGiven" type="number" min="0" step="0.01" placeholder="$0.00"></div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div><label style="font-size:12px">Cash received</label><input id="manTCashRecv" type="number" min="0" step="0.01" placeholder="$0.00"></div>
+          <div><label style="font-size:12px">Item(s) received value</label><input id="manTItemRecv" type="number" min="0" step="0.01" placeholder="$0.00"></div>
+        </div>
+        <label style="font-size:12px;margin-top:10px">Description</label>
+        <input id="manTDesc" type="text" placeholder="What was traded">
+      </div>
+
+      <button class="log-btn" onclick="addManualEntry()">Add Entry</button>
+    </div>
+
+    <div class="panel">
+      <label style="margin-bottom:4px">Transaction History</label>
+      <div id="txnList"></div>
+    </div>
+
+  </div>
+</section>
+
 </main>
 </div>
 
-<script>
-let buyRate=80, tradeRateChoice=80;
+<div class="toast" id="toast"></div>
 
-function money(n){return '$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+<script>
+/* =========================================================
+   Shared helpers
+========================================================= */
+let buyRate=80, tradeRateChoice=80;
+let manualType='sale';
+let transactions=[]; // {id, ts, type:'sale'|'expense'|'trade', desc, ...fields}
+let storageReady=false;
+
+function money(n){
+  const v=Number(n)||0;
+  const sign = v<0 ? '-' : '';
+  return sign+'$'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
 function pct(n){return (Number(n)||0).toFixed(1)+'%'}
+function amtClass(n){return n<0?'neg':(n>0?'pos':'')}
 
 function showTab(id,btn){
-  ['buy','trade','profit'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
+  ['buy','trade','profit','pnl'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   btn.classList.add('active');
+  if(id==='pnl') renderPnl();
 }
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* =========================================================
+   BUY tab
+========================================================= */
 function setRate(r,btn){
   buyRate=r;
   document.querySelectorAll('#buy .rate').forEach(x=>x.classList.remove('selected'));
@@ -175,6 +366,22 @@ function calcBuy(){
     return `<tr><td>${r}%</td><td>${money(c)}</td><td>${money(t)}</td><td>${money(p)}</td><td>${pct(ro)}</td></tr>`;
   }).join('');
 }
+function logBuy(){
+  const v=parseFloat(document.getElementById('buyValue').value)||0;
+  const cash=v*buyRate/100;
+  if(cash<=0){ showToast('Enter a market value first'); return; }
+  const desc=document.getElementById('buyDesc').value.trim()||'Card purchase';
+  addTransaction({
+    type:'expense', category:'Purchase', amount:cash,
+    desc, note:`Bought at ${buyRate}% of market value ($${v.toFixed(2)})`
+  });
+  document.getElementById('buyDesc').value='';
+  showToast('Logged as expense: '+money(cash));
+}
+
+/* =========================================================
+   TRADE tab
+========================================================= */
 function setTradeRate(r,btn){
   tradeRateChoice=r;
   document.querySelectorAll('#trade .rate').forEach(x=>x.classList.remove('selected'));
@@ -193,6 +400,26 @@ function calcTrade(){
   document.getElementById('givingCredit').textContent=money(givingCredit);
   document.getElementById('tradeDifference').textContent=money(difference);
 }
+function logTrade(){
+  const received=parseFloat(document.getElementById('tradeReceived').value)||0;
+  const giving=parseFloat(document.getElementById('tradeGiving').value)||0;
+  const cashGiven=parseFloat(document.getElementById('tradeCashGiven').value)||0;
+  const cashReceived=parseFloat(document.getElementById('tradeCashReceived').value)||0;
+  if(received<=0 && giving<=0){ showToast('Enter a market value first'); return; }
+  const desc=document.getElementById('tradeDesc').value.trim()||'Card trade';
+  addTransaction({
+    type:'trade', desc,
+    cashGiven, itemGiven:giving, cashReceived, itemReceived:received
+  });
+  document.getElementById('tradeDesc').value='';
+  document.getElementById('tradeCashGiven').value='';
+  document.getElementById('tradeCashReceived').value='';
+  showToast('Trade logged');
+}
+
+/* =========================================================
+   PROFIT tab
+========================================================= */
 function calcProfit(){
   const sale=parseFloat(document.getElementById('saleValue').value)||0;
   const cost=parseFloat(document.getElementById('cost').value)||0;
@@ -203,7 +430,323 @@ function calcProfit(){
   document.getElementById('margin').textContent=pct(margin);
   document.getElementById('totalCost').textContent=money(total);
 }
-calcBuy(); calcTrade(); calcProfit();
+function logSale(){
+  const sale=parseFloat(document.getElementById('saleValue').value)||0;
+  const fees=parseFloat(document.getElementById('fees').value)||0;
+  if(sale<=0){ showToast('Enter a sale value first'); return; }
+  const desc=document.getElementById('saleDesc').value.trim()||'Card sale';
+  addTransaction({ type:'sale', amount:sale, desc });
+  if(fees>0){
+    addTransaction({ type:'expense', category:'Selling Fee', amount:fees, desc:desc+' (fees)' });
+  }
+  document.getElementById('saleDesc').value='';
+  showToast('Sale logged: '+money(sale));
+}
+
+/* =========================================================
+   Ledger + persistence (db capability — real per-artifact storage)
+========================================================= */
+let dbApi = null;
+let txnCol = null;
+let gotFirstSnapshot = false;
+let localFallback = []; // used only if the db capability isn't available
+
+async function initDb(){
+  try{
+    if(window.claude && window.claude.use){
+      dbApi = await window.claude.use('db');
+    }
+  }catch(e){
+    dbApi = null;
+  }
+  if(dbApi){
+    storageReady = true;
+    txnCol = dbApi.collection('transactions');
+    txnCol.orderBy('ts','desc').onSnapshot(
+      snap=>{
+        transactions = snap.docs.map(d=>({ id: d.id, ...d.data() }));
+        gotFirstSnapshot = true;
+        finishLoading();
+        if(!document.getElementById('pnl').classList.contains('hidden')) renderPnl();
+      },
+      err=>{
+        console.error('db sync error', err);
+        showToast('Sync error — changes may not save');
+        gotFirstSnapshot = true;
+        finishLoading();
+      }
+    );
+    // Safety timeout in case the snapshot never arrives (e.g. capability not granted this view)
+    setTimeout(()=>{ if(!gotFirstSnapshot){ storageReady=false; finishLoading(); } }, 4000);
+  } else {
+    storageReady = false;
+    transactions = localFallback;
+    finishLoading();
+  }
+}
+function finishLoading(){
+  document.getElementById('pnlLoading').classList.add('hidden');
+  document.getElementById('pnlContent').classList.remove('hidden');
+  if(!storageReady && !document.getElementById('fallbackBanner')){
+    document.getElementById('pnlContent').insertAdjacentHTML('afterbegin',
+      '<div id="fallbackBanner" class="panel" style="background:#fffbeb;border:1px solid #fbbf24"><div class="note" style="color:#92400e;margin-top:0">Storage isn\'t available in this view, so entries will only last for this session.</div></div>');
+  }
+  checkImportPrompt();
+  renderPnl();
+}
+async function addTransaction(t){
+  t.ts = Date.now();
+  if(dbApi && txnCol){
+    try{
+      await txnCol.add(t); // onSnapshot updates the UI automatically
+    }catch(e){
+      console.error('Write failed', e);
+      showToast('Could not save that entry');
+    }
+  } else {
+    t.id = 't'+Date.now()+Math.random().toString(36).slice(2,7);
+    transactions.unshift(t);
+    localFallback = transactions;
+    if(!document.getElementById('pnl').classList.contains('hidden')) renderPnl();
+  }
+}
+async function deleteTransaction(id){
+  if(dbApi && txnCol){
+    try{
+      await txnCol.doc(id).delete(); // onSnapshot updates the UI automatically
+    }catch(e){
+      console.error('Delete failed', e);
+      showToast('Could not delete that entry');
+    }
+  } else {
+    transactions = transactions.filter(t=>t.id!==id);
+    localFallback = transactions;
+    renderPnl();
+  }
+}
+
+function setManualType(type,btn){
+  manualType=type;
+  document.querySelectorAll('#manualSeg button').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('manualSale').classList.toggle('hidden', type!=='sale');
+  document.getElementById('manualExpense').classList.toggle('hidden', type!=='expense');
+  document.getElementById('manualTrade').classList.toggle('hidden', type!=='trade');
+}
+function addManualEntry(){
+  if(manualType==='sale'){
+    const amt=parseFloat(document.getElementById('manSaleAmt').value)||0;
+    if(amt<=0){ showToast('Enter an amount'); return; }
+    const desc=document.getElementById('manSaleDesc').value.trim()||'Sale';
+    addTransaction({type:'sale', amount:amt, desc});
+    document.getElementById('manSaleAmt').value='';
+    document.getElementById('manSaleDesc').value='';
+  } else if(manualType==='expense'){
+    const amt=parseFloat(document.getElementById('manExpAmt').value)||0;
+    if(amt<=0){ showToast('Enter an amount'); return; }
+    const cat=document.getElementById('manExpCat').value;
+    const desc=document.getElementById('manExpDesc').value.trim()||cat;
+    addTransaction({type:'expense', category:cat, amount:amt, desc});
+    document.getElementById('manExpAmt').value='';
+    document.getElementById('manExpDesc').value='';
+  } else {
+    const cg=parseFloat(document.getElementById('manTCashGiven').value)||0;
+    const ig=parseFloat(document.getElementById('manTItemGiven').value)||0;
+    const cr=parseFloat(document.getElementById('manTCashRecv').value)||0;
+    const ir=parseFloat(document.getElementById('manTItemRecv').value)||0;
+    if(cg+ig+cr+ir<=0){ showToast('Enter at least one value'); return; }
+    const desc=document.getElementById('manTDesc').value.trim()||'Trade';
+    addTransaction({type:'trade', cashGiven:cg, itemGiven:ig, cashReceived:cr, itemReceived:ir, desc});
+    ['manTCashGiven','manTItemGiven','manTCashRecv','manTItemRecv','manTDesc'].forEach(id=>document.getElementById(id).value='');
+  }
+  showToast('Entry added');
+}
+
+/* =========================================================
+   P&L rendering
+========================================================= */
+function renderPnl(){
+  let sales=0, tradeRealized=0, tradeUnrealized=0, tableFee=0, purchases=0, sellFees=0;
+  transactions.forEach(t=>{
+    if(t.type==='sale') sales += t.amount;
+    else if(t.type==='expense'){
+      if(t.category==='Table Fee') tableFee += t.amount;
+      else if(t.category==='Selling Fee') sellFees += t.amount;
+      else purchases += t.amount;
+    } else if(t.type==='trade'){
+      tradeRealized += (t.cashReceived - t.cashGiven);
+      tradeUnrealized += (t.itemReceived - t.itemGiven);
+    }
+  });
+  const totalIncome = sales + tradeRealized;
+  const totalExp = tableFee + purchases + sellFees;
+  const netRealized = totalIncome - totalExp;
+  const grandTotal = netRealized + tradeUnrealized;
+
+  document.getElementById('plSales').textContent = money(sales);
+  document.getElementById('plTradeRealized').textContent = money(tradeRealized);
+  document.getElementById('plTradeRealized').className = 'amt '+amtClass(tradeRealized);
+  document.getElementById('plTotalIncome').textContent = money(totalIncome);
+  document.getElementById('plFees').textContent = money(tableFee);
+  document.getElementById('plPurchases').textContent = money(purchases);
+  document.getElementById('plSellFees').textContent = money(sellFees);
+  document.getElementById('plTotalExp').textContent = money(totalExp);
+  document.getElementById('netRealized').textContent = money(netRealized);
+  document.getElementById('netUnrealized').textContent = money(tradeUnrealized);
+  document.getElementById('plGrandTotal').textContent = money(grandTotal);
+  document.getElementById('plGrandTotal').className = 'amt '+amtClass(grandTotal);
+
+  const list=document.getElementById('txnList');
+  if(transactions.length===0){
+    list.innerHTML='<div class="empty">No transactions logged yet. Log a Buy, Trade, or Sale — or add one manually above.</div>';
+    return;
+  }
+  list.innerHTML = transactions.map(t=>{
+    let badge, line, amt, cls;
+    const dateStr = new Date(t.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    if(t.type==='sale'){
+      badge='sale'; line=t.desc; amt=t.amount; cls='pos';
+    } else if(t.type==='expense'){
+      badge='expense'; line=`${t.desc} (${t.category})`; amt=-t.amount; cls='neg';
+    } else {
+      badge='trade';
+      const net=(t.cashReceived-t.cashGiven)+(t.itemReceived-t.itemGiven);
+      line=t.desc; amt=net; cls=amtClass(net);
+    }
+    return `<div class="txn">
+      <div>
+        <span class="badge ${badge}">${badge}</span>
+        <div class="d">${line}</div>
+        <div class="date">${dateStr}</div>
+      </div>
+      <div class="right">
+        <div class="amt ${cls}">${money(amt)}</div>
+        <button class="del" onclick="deleteTransaction('${t.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* =========================================================
+   Historical import (your existing P&L workbook, 7/9/26–9/3/26)
+========================================================= */
+const SEED_SALES = [
+["7/9/26","Eevee PB + 1x Chaos Rising pack",10],["7/9/26","Raichu, Gengar EX, 1x Chaos Rising pack",20],
+["7/9/26","Charizard EX (151)",7],["7/9/26","Pikachu MC, Glaceon EX, Eevee EX, mystery $5 flying Pikachu card",54],
+["7/9/26","Machamp",10],["7/9/26","Mega Charizard X + Chaos Rising 3-pack",63],
+["7/9/26","Pikachu EX, Sharpedo EX, Palossand EX",6],["7/22/26","Wooper (Cosmic Eclipse)",1],
+["7/22/26","First Partners pack",45],["7/22/26","Chaos Rising 3-pack",23],
+["7/22/26","Pikachu XY, Flareon PB, Glaceon PB",5],["7/22/26","Dialga XY Promo",45],
+["8/1/26","Snorlax (Cosmos holo)",10],["8/1/26","M Gengar EX",2],
+["8/1/26","Shiny Corsola + Shiny Corviknight",4],["8/1/26","Sylveon EX",50],
+["8/1/26","Wobbuffet + Gulpin",15],["8/1/26","Mew Promo + Flareon",19],
+["8/1/26","BP pack",4],["8/1/26","Meowth IR",20],
+["8/1/26","Ascended Heroes booster pack",78],["8/1/26","2x Ascended Heroes booster packs",150],
+["8/1/26","BP pack",4],["8/1/26","Celebi V",80],
+["8/1/26","Snorlax Reverse + Snorlax + Snorlax",27],["8/1/26","Furret x2 + Wooloo",22],
+["8/1/26","Iris' Fighting Energy + Clesire EX",3],["8/1/26","Misty's Tears",20],
+["8/1/26","Mega Venusaur Collection",60],["8/3/26","Zoroark GX",6],
+["8/3/26","Mewtwo EX",2],["8/3/26","Pikachu GX + Pikachu",12],
+["8/3/26","Swablu + Snorunt",15],["8/3/26","Pikachu + Pawmot EX",5],
+["8/3/26","Ascended Heroes ETB",160],["8/3/26","Arcanine EX + Dusknoir & Trevenant",33],
+["8/20/26","Greninja EX, Cobalion EX, Gourgeist EX",17],["8/20/26","Cranidos EX",2],
+["8/20/26","Espeon GX, Volcanion EX, Ceflairy EX, Houndstone, Hoopa EX + a few $1 cards",16],
+["8/20/26","Silvally IR",3],["8/20/26","Tauros GX, Slowpoke 1st Edition, Precious Trolley + a few other cards",15],
+["8/20/26","White Kyurem, Reshiram, Reshiram & Zekrom GX tag team",135],
+["9/3/26","Fuecoco, 3x EX cards, Nagandel",10],["9/3/26","Shinx, 2x Eevee (Jungle)",7],
+["9/3/26","2x EX cards",2],["9/3/26","Celebi & Venusaur GX",23],
+["9/3/26","2x One Piece illustration boxes",65],["9/3/26","Dark Slowbro, Psyduck, Lickitung, Morpeko",30]
+];
+const SEED_EXPENSES = [
+["7/9/26","Table fee","Table Fee",40],["7/9/26","Machamp and Celebi V","Purchase",77],
+["7/9/26","Meowth IR","Purchase",15],["7/14/26","Eevee GX and M Pidgeot EX","Purchase",125],
+["7/16/26","Battle Partners","Purchase",101],["7/22/26","Table fee","Table Fee",40],
+["8/1/26","Table fee","Table Fee",65],["8/1/26","Sharpedo EX SIR and Gholdengo EX SIR","Purchase",43],
+["8/3/26","Prismatic Evolutions bundle (opened) — pulls appraised ~$1","Purchase",85],
+["8/6/26","4x One Piece illustration boxes + 2-pack Zarude","Purchase",119],
+["8/20/26","Table fee","Table Fee",40],
+["8/20/26","Zeraora EX and Cleffa Reverse — appraised ~$70 at acquisition","Purchase",50],
+["8/20/26","Charizard PSA 10 Celebrations — appraised ~$550 at acquisition","Purchase",450],
+["8/20/26","Venusaur Base Set 2 — appraised ~$65 at acquisition","Purchase",53],
+["9/3/26","Table fee","Table Fee",40]
+];
+// [date, desc, cashGiven, itemGiven, cashReceived, itemReceived]
+const SEED_TRADES = [
+["7/9/26","Eevee V + Galarian Meowth → Shaymin + Drapion + Spewpa",0,12,0,17],
+["7/9/26","Ancient Mew + Shiny Mew → Ascended Heroes ETB + First Partner Series 2",0,165,0,210],
+["7/22/26","M Dragonite + Mewtwo GX + Articuno → Destined Rivals bundle",0,76,0,90],
+["7/22/26","$120 + Scizor VMAX PSA 10 → Burger Pika PSA 10 + preorder SV Pikachu PSA 10",120,70,0,210],
+["8/1/26","Snorlax & Eevee GX + $165 → Snivy & Venusaur GX PSA 10",165,80,0,275],
+["8/1/26","Mega Floette → Silvally",0,3,0,4],
+["8/1/26","Southern Islands Mew PSA 8 → $800 + Rayquaza EX",0,1400,800,700],
+["8/1/26","Ascended Heroes bundle → Reshiram & Zekrom GX",0,80,0,95],
+["8/1/26","$295 + Pikachu Reverse → TR Mewtwo",295,17,0,388],
+["8/1/26","Snivy & Venusaur PSA 10 + Gold Star Umbreon PSA 10 → Giratina V + $40",0,695,40,800],
+["8/1/26","PSA 10 Wailord → Tyranitar + Oshawott + Pikachu SR",0,200,0,225],
+["8/7/26","Giratina V + Magikarp IR → $675 + Greninja EX PSA 10",0,1195,675,420],
+["8/20/26","Oricorio EX PSA 10 → Mewtwo V + Dialga V + Celebi EX",0,100,0,135],
+["8/20/26","Tyranitar V Striker Tin → Charizard GX + Toedscool + Skarmory + Melmetal EX box + $40 + VJ Edgecombe card",0,110,40,80],
+["8/20/26","Prismatic Costco 2-pack → Reshiram & Charizard GX tag, Kyurem EX, Ampharos EX, M Houndoom EX, M Alakazam EX, Giratina EX, Umbreon GX",0,285,0,450],
+["8/20/26","Charizard EX → Mew Promo",0,4,0,3],
+["9/3/26","Celebi EX → Morpeko EX",0,70,0,87],
+["9/3/26","Pikachu → Cinccino EX + $5",0,51,5,55],
+["9/3/26","Arceus + Kyurem + Lugia GX → Charmeleon PSA 8 + Dragonair PSA 8 + Pidove",0,102,0,150],
+["9/3/26","Greninja EX PSA 10 → Ascended Heroes pack + $110",0,425,110,390],
+["9/3/26","28 assorted $1-2 cards + Mewtwo V + Umbreon GX + Charizard GX + Ninetales EX + Gardevoir EX → SGA /99 Twilight + LaMelo Ball Highlight /99",0,87.5,0,100]
+];
+
+function dateToTs(dateStr){
+  const [m,d,y] = dateStr.split('/').map(Number);
+  return new Date(2000+y, m-1, d, 12, 0, 0).getTime();
+}
+
+async function runImport(){
+  if(!dbApi || !txnCol){ showToast('Import needs a saved connection — try reopening the published page'); return; }
+  document.getElementById('importBanner').classList.add('hidden');
+  showToast('Importing…');
+  try{
+    const writes = [];
+    SEED_SALES.forEach(([date,desc,amount])=>{
+      writes.push(txnCol.add({type:'sale', desc, amount, ts:dateToTs(date)}));
+    });
+    SEED_EXPENSES.forEach(([date,desc,category,amount])=>{
+      writes.push(txnCol.add({type:'expense', desc, category, amount, ts:dateToTs(date)}));
+    });
+    SEED_TRADES.forEach(([date,desc,cashGiven,itemGiven,cashReceived,itemReceived])=>{
+      writes.push(txnCol.add({type:'trade', desc, cashGiven, itemGiven, cashReceived, itemReceived, ts:dateToTs(date)}));
+    });
+    await Promise.all(writes);
+    await dbApi.doc('meta/import').set({imported:true, importedAt:Date.now()});
+    showToast('Imported '+writes.length+' historical transactions');
+  }catch(e){
+    console.error('Import failed', e);
+    showToast('Import failed — see console for details');
+  }
+}
+async function dismissImport(){
+  document.getElementById('importBanner').classList.add('hidden');
+  if(dbApi){
+    try{ await dbApi.doc('meta/import').set({imported:false, skipped:true, skippedAt:Date.now()}); }catch(e){}
+  }
+}
+async function checkImportPrompt(){
+  if(!dbApi) return;
+  try{
+    const marker = await dbApi.doc('meta/import').get();
+    if(!marker.exists && transactions.length===0){
+      document.getElementById('importBanner').classList.remove('hidden');
+    }
+  }catch(e){ /* not critical — just skip the prompt */ }
+}
+
+/* =========================================================
+   Init
+========================================================= */
+function init(){
+  calcBuy(); calcTrade(); calcProfit();
+  initDb();
+}
+init();
 </script>
 </body>
 </html>
