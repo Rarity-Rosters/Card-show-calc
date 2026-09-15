@@ -71,6 +71,10 @@ input:focus,select:focus{border-color:#111827}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
 .seg button{padding:10px 4px;border:2px solid #d1d5db;background:white;border-radius:9px;font-weight:700;font-size:13px}
 .seg button.selected{background:#111827;color:white;border-color:#111827}
+.sortbar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px}
+.sortbtn{padding:9px 4px;border:2px solid #d1d5db;background:white;border-radius:9px;font-weight:700;font-size:12px;color:#374151}
+.sortbtn.active{background:#111827;color:white;border-color:#111827}
+.sortbtn .arrow{font-size:10px}
 @media(max-width:430px){main{padding:11px}.panel{padding:14px}.rate{font-size:14px}.result .v{font-size:19px}.tab{font-size:12px}}
 </style>
 </head>
@@ -113,7 +117,7 @@ input:focus,select:focus{border-color:#111827}
       <div class="result"><div class="k">Profit at Cash</div><div class="v" id="buyProfit">$0.00</div></div>
       <div class="result"><div class="k">ROI at Cash</div><div class="v" id="buyROI">0.0%</div></div>
     </div>
-    <div class="note">Trade value is automatically 5 percentage points above your cash rate.</div>
+    <div class="note">Trade value is automatically 5 percentage points above the vendor's cash rate.</div>
   </div>
 
   <div class="panel">
@@ -125,10 +129,10 @@ input:focus,select:focus{border-color:#111827}
   </div>
 
   <div class="panel">
-    <label>What are you buying? (optional, for your records)</label>
+    <label>What is the vendor buying? (optional, for the vendor's records)</label>
     <input id="buyDesc" type="text" placeholder="e.g. Charizard PSA 10 Celebrations">
     <button class="log-btn" onclick="logBuy()">Log as Expense (Cash Offer)</button>
-    <div class="note">Logs the Cash Offer as a purchase expense. The Market Value is saved as a note only — it isn't counted as profit until you actually sell the card.</div>
+    <div class="note">Logs the Cash Offer as a purchase expense. The Market Value is saved as a note only — it isn't counted as profit until the vendor actually sells the card.</div>
   </div>
 </section>
 
@@ -154,29 +158,29 @@ input:focus,select:focus{border-color:#111827}
       <div class="result"><div class="k">Potential Profit</div><div class="v" id="tradeProfit">$0.00</div></div>
       <div class="result"><div class="k">ROI</div><div class="v" id="tradeROI">0.0%</div></div>
     </div>
-    <div class="note">This treats the trade credit you give as your acquisition cost for the cards you receive.</div>
+    <div class="note">This treats the trade credit the vendor gives as the vendor's acquisition cost for the cards the vendor receives.</div>
   </div>
   <div class="panel">
-    <label>Market Value of Cards You're Giving</label>
+    <label>Market Value of Cards the Vendor Is Giving</label>
     <input id="tradeGiving" type="number" min="0" step="0.01" placeholder="$0.00" oninput="calcTrade()">
     <div class="results" style="margin-top:10px">
-      <div class="result"><div class="k">Your Trade Credit</div><div class="v" id="givingCredit">$0.00</div></div>
+      <div class="result"><div class="k">Vendor's Trade Credit</div><div class="v" id="givingCredit">$0.00</div></div>
       <div class="result"><div class="k">Difference</div><div class="v" id="tradeDifference">$0.00</div></div>
     </div>
-    <div class="note">Difference = trade credit you receive for what you give minus the market value of what you receive. Positive means you're giving less market value than you're receiving.</div>
+    <div class="note">Difference = trade credit the vendor receives for what the vendor gives minus the market value of what the vendor receives. Positive means the vendor is giving less market value than the vendor is receiving.</div>
   </div>
 
   <div class="panel">
     <label>Cash added on top (optional)</label>
     <div class="row">
-      <div><label style="font-weight:600;font-size:12px">You also pay</label><input id="tradeCashGiven" type="number" min="0" step="0.01" placeholder="$0.00" oninput="calcTrade()"></div>
-      <div><label style="font-weight:600;font-size:12px">You also receive</label><input id="tradeCashReceived" type="number" min="0" step="0.01" placeholder="$0.00" oninput="calcTrade()"></div>
+      <div><label style="font-weight:600;font-size:12px">Vendor also pays</label><input id="tradeCashGiven" type="number" min="0" step="0.01" placeholder="$0.00" oninput="calcTrade()"></div>
+      <div><label style="font-weight:600;font-size:12px">Vendor also receives</label><input id="tradeCashReceived" type="number" min="0" step="0.01" placeholder="$0.00" oninput="calcTrade()"></div>
     </div>
     <div class="note">Fill these in if cash changed hands alongside the cards, like "$120 + Card A for Card B".</div>
   </div>
 
   <div class="panel">
-    <label>Trade description (optional, for your records)</label>
+    <label>Trade description (optional, for the vendor's records)</label>
     <input id="tradeDesc" type="text" placeholder="e.g. Oricorio EX PSA 10 for Mewtwo V + Dialga V">
     <button class="log-btn" onclick="logTrade()">Log This Trade</button>
     <div class="note">Logs the market values above as a trade: the cash portion counts as Realized, the card-value portion counts as Unrealized (paper value, not sold yet).</div>
@@ -205,21 +209,21 @@ input:focus,select:focus{border-color:#111827}
   </div>
 
   <div class="panel">
-    <label>What did you sell? (optional, for your records)</label>
+    <label>What did the vendor sell? (optional, for the vendor's records)</label>
     <input id="saleDesc" type="text" placeholder="e.g. Sylveon EX">
     <button class="log-btn" onclick="logSale()">Log This Sale</button>
-    <div class="note">Logs the Sale Value as Sales Revenue and the Fees as an expense. Acquisition Cost is <b>not</b> logged again here — it should already be on the books from when you bought or traded for the card, so this avoids double-counting.</div>
+    <div class="note">Logs the Sale Value as Sales Revenue and the Fees as an expense. Acquisition Cost is <b>not</b> logged again here — it should already be on the books from when the vendor bought or traded for the card, so this avoids double-counting.</div>
   </div>
 </section>
 
 <!-- ============ P&L ============ -->
 <section id="pnl" class="hidden">
 
-  <div id="pnlLoading" class="panel" style="text-align:center;color:#6b7280;font-size:13px">Loading your P&amp;L…</div>
+  <div id="pnlLoading" class="panel" style="text-align:center;color:#6b7280;font-size:13px">Loading the vendor's P&amp;L…</div>
 
   <div id="importBanner" class="hidden panel" style="background:#eff6ff;border:1px solid #93c5fd">
-    <label style="margin-bottom:6px">Import your existing P&amp;L data</label>
-    <div class="note" style="margin-top:0">This loads the sales, expenses, and trades from your workbook (7/9/26 through 9/3/26) into this ledger, dated correctly. One-time — safe to skip if you'd rather start fresh.</div>
+    <label style="margin-bottom:6px">Import the vendor's existing P&amp;L data</label>
+    <div class="note" style="margin-top:0">This loads the sales, expenses, and trades from the vendor's workbook (7/9/26 through 9/3/26) into this ledger, dated correctly. One-time — safe to skip if the vendor would rather start fresh.</div>
     <div class="row" style="margin-top:12px">
       <button class="log-btn" style="margin-top:0;background:#2563eb" onclick="runImport()">Import Historical Data</button>
       <button class="log-btn" style="margin-top:0;background:#9ca3af" onclick="dismissImport()">Skip</button>
@@ -249,7 +253,7 @@ input:focus,select:focus{border-color:#111827}
         <div class="k">Unrealized Trading Gain (paper, not cash)</div>
         <div class="v" id="netUnrealized">$0.00</div>
       </div>
-      <div class="note">This is the appraisal-value edge on cards you've traded for but haven't sold yet.</div>
+      <div class="note">This is the appraisal-value edge on cards the vendor has traded for but hasn't sold yet.</div>
     </div>
 
     <div class="panel">
@@ -267,7 +271,7 @@ input:focus,select:focus{border-color:#111827}
       <div id="manualSale">
         <div class="row">
           <div><label style="font-size:12px">Amount</label><input id="manSaleAmt" type="number" min="0" step="0.01" placeholder="$0.00"></div>
-          <div><label style="font-size:12px">Description</label><input id="manSaleDesc" type="text" placeholder="What you sold"></div>
+          <div><label style="font-size:12px">Description</label><input id="manSaleDesc" type="text" placeholder="What the vendor sold"></div>
         </div>
       </div>
 
@@ -304,12 +308,18 @@ input:focus,select:focus{border-color:#111827}
 
     <div class="panel">
       <label style="margin-bottom:4px">Transaction History</label>
+      <div class="sortbar">
+        <button class="sortbtn active" data-field="date" onclick="cycleSort('date')">Date <span class="arrow" id="arrowdate">▼</span></button>
+        <button class="sortbtn" data-field="value" onclick="cycleSort('value')">Value <span class="arrow" id="arrowvalue"></span></button>
+        <button class="sortbtn" data-field="type" onclick="cycleSort('type')">Type <span class="arrow" id="arrowtype"></span></button>
+      </div>
+      <div class="note" style="margin-top:0;margin-bottom:10px">Tap to sort by it, tap again to flip direction, tap a third time to turn it off. Stack more than one — the order you tap them in sets the priority (shown as a number when 2+ are active).</div>
       <div id="txnList"></div>
     </div>
 
     <div class="panel">
       <label style="margin-bottom:6px">Backup</label>
-      <div class="note" style="margin-top:0">Download your ledger as a file, or load one back in — handy for moving data between devices or backing it up before clearing your browser.</div>
+      <div class="note" style="margin-top:0">Download the vendor's ledger as a file, or load one back in — handy for moving data between devices or backing it up before clearing the vendor's browser.</div>
       <div class="row" style="margin-top:10px">
         <button class="log-btn" style="margin-top:0" onclick="exportLedger()">Export JSON</button>
         <button class="log-btn" style="margin-top:0;background:#374151" onclick="triggerImportFile()">Import JSON</button>
@@ -528,7 +538,7 @@ function finishLoading(){
   if(existingBanner) existingBanner.remove();
   if(backend==='local'){
     document.getElementById('pnlContent').insertAdjacentHTML('afterbegin',
-      '<div id="backendBanner" class="panel" style="background:#eff6ff;border:1px solid #93c5fd"><div class="note" style="color:#1e40af;margin-top:0">Saved to this browser only — it\'ll be here next time you open this page on this device, but won\'t follow you to another device or browser. Use Export below to back it up or move it.</div></div>');
+      '<div id="backendBanner" class="panel" style="background:#eff6ff;border:1px solid #93c5fd"><div class="note" style="color:#1e40af;margin-top:0">Saved to this browser only — it\'ll be here next time the vendor opens this page on this device, but won\'t follow the vendor to another device or browser. Use Export below to back it up or move it.</div></div>');
   }
   checkImportPrompt();
   renderPnl();
@@ -655,6 +665,44 @@ function addManualEntry(){
 /* =========================================================
    P&L rendering
 ========================================================= */
+let sortCriteria = [{field:'date', dir:'desc'}]; // priority order = array order
+
+function txnValue(t){
+  if(t.type==='sale') return t.amount;
+  if(t.type==='expense') return -t.amount;
+  return (t.cashReceived - t.cashGiven) + (t.itemReceived - t.itemGiven);
+}
+function defaultDir(field){ return field==='type' ? 'asc' : 'desc'; }
+function cycleSort(field){
+  const idx = sortCriteria.findIndex(c=>c.field===field);
+  if(idx===-1){
+    // off -> on, at default direction, added as the newest (lowest) priority
+    sortCriteria.push({field, dir:defaultDir(field)});
+  } else if(sortCriteria[idx].dir===defaultDir(field)){
+    // on (default dir) -> on (flipped dir), same priority position
+    sortCriteria[idx].dir = defaultDir(field)==='asc' ? 'desc' : 'asc';
+  } else {
+    // on (flipped dir) -> off
+    sortCriteria.splice(idx,1);
+  }
+  renderPnl();
+}
+function sortedTransactions(){
+  const arr = transactions.slice();
+  arr.sort((a,b)=>{
+    for(const {field,dir} of sortCriteria){
+      let av,bv;
+      if(field==='date'){ av=a.ts; bv=b.ts; }
+      else if(field==='value'){ av=txnValue(a); bv=txnValue(b); }
+      else { av=a.type; bv=b.type; }
+      if(av<bv) return dir==='asc' ? -1 : 1;
+      if(av>bv) return dir==='asc' ? 1 : -1;
+    }
+    return 0;
+  });
+  return arr;
+}
+
 function renderPnl(){
   let sales=0, tradeRealized=0, tradeUnrealized=0, tableFee=0, purchases=0, sellFees=0;
   transactions.forEach(t=>{
@@ -686,12 +734,26 @@ function renderPnl(){
   document.getElementById('plGrandTotal').textContent = money(grandTotal);
   document.getElementById('plGrandTotal').className = 'amt '+amtClass(grandTotal);
 
+  document.querySelectorAll('.sortbtn').forEach(b=>{
+    const f = b.dataset.field;
+    const idx = sortCriteria.findIndex(c=>c.field===f);
+    const arrowEl = document.getElementById('arrow'+f);
+    if(idx===-1){
+      b.classList.remove('active');
+      arrowEl.textContent='';
+    } else {
+      b.classList.add('active');
+      const dirArrow = sortCriteria[idx].dir==='asc' ? '▲' : '▼';
+      arrowEl.textContent = sortCriteria.length>1 ? dirArrow+(idx+1) : dirArrow;
+    }
+  });
+
   const list=document.getElementById('txnList');
   if(transactions.length===0){
     list.innerHTML='<div class="empty">No transactions logged yet. Log a Buy, Trade, or Sale — or add one manually above.</div>';
     return;
   }
-  list.innerHTML = transactions.map(t=>{
+  list.innerHTML = sortedTransactions().map(t=>{
     let badge, line, amt, cls;
     const dateStr = new Date(t.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});
     if(t.type==='sale'){
