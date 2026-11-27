@@ -561,11 +561,7 @@ function finishLoading(){
   document.getElementById('pnlLoading').classList.add('hidden');
   document.getElementById('pnlContent').classList.remove('hidden');
   const existingBanner = document.getElementById('backendBanner');
-  if(existingBanner) existingBanner.remove();
-  if(backend==='local'){
-    document.getElementById('pnlContent').insertAdjacentHTML('afterbegin',
-      '<div id="backendBanner" class="panel" style="background:var(--info-bg);border:1px solid var(--info-bd)"><div class="note" style="color:var(--info-tx);margin-top:0">Saved to this browser only — it\'ll be here next time the vendor opens this page on this device, but won\'t follow the vendor to another device or browser. Use Export below to back it up or move it.</div></div>');
-  }
+
   checkImportPrompt();
   if(!invLoaded){ invLoaded=true; loadInv(); }
   renderPnl();
